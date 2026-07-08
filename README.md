@@ -145,3 +145,8 @@ The summary metrics include:
 - confusion matrices for default `mcq` and `yn` evaluation.
 
 For circular `mcq` evaluation, each original example is expanded into option order variants. The final example score is `1.0` only when all variants are correct.
+
+## Acknowledgement
+
+This work was supported by the Polish Ministry of Digital Affairs (subsidy no. 4/WII/DBI/2026).
+The computational resources were provided by the Polish high-performance computing infrastructure PLGrid (HPC Center: ACK Cyfronet AGH) under computational grant no. PLG/2026/019138. 
