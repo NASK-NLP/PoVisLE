@@ -1,0 +1,20 @@
+name: Mistral-Medium-3.5-128B
+org: MistralAI
+model_id: mistralai/Mistral-Medium-3.5-128B
+model_family: mistral3
+model_type: open
+model_size: 128B
+backend: vllm
+model_args:
+  dtype: bfloat16
+  trust_remote_code: true
+  max_model_len: 8192
+  tensor_parallel_size: 4
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+  max_num_batched_tokens: 16384
+  max_num_seqs: 32
+generation:
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0

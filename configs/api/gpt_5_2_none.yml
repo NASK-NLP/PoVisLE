@@ -1,0 +1,17 @@
+name: GPT-5.2
+org: OpenAI
+model_id: gpt-5.2-2025-12-11
+model_family: gpt-5
+model_type: proprietary
+model_size: null
+backend: api
+model_args:
+  api_key_env: OPENAI_API_KEY
+  num_threads: 8
+  max_retries: 5
+generation:
+  max_completion_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+  reasoning_effort: none
+  seed: 42

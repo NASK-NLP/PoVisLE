@@ -1,0 +1,23 @@
+name: LLaVA-PLLuM-12B-250715
+org: NASK-PIB
+model_id: NASK-PIB/LLaVA-PLLuM-12b-nc-instruct-250715
+model_family: llava_next
+model_type: open
+model_size: 12B
+backend: vllm
+model_args:
+  dtype: float16
+  trust_remote_code: true
+  max_model_len: 8192
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+generation:
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+preprocessing:
+  steps:
+    - name: prepend
+      args:
+        prefix: "<image>\n"

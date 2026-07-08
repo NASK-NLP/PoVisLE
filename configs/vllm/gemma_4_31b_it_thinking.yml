@@ -1,0 +1,33 @@
+name: Gemma-4-31B-it (Thinking)
+org: Google
+model_id: google/gemma-4-31B-it
+model_family: gemma4
+model_type: open
+model_size: 31B
+backend: vllm
+model_args:
+  dtype: bfloat16
+  trust_remote_code: true
+  max_model_len: 16384
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+generation:
+  max_new_tokens: 8192
+  temperature: 0.0
+  top_p: 1.0
+  skip_special_tokens: false
+  chat_template_kwargs:
+    enable_thinking: true
+postprocessing:
+  steps:
+    - name: replace
+      args:
+        pattern: "^<\\|channel>thought\\s*.*?<channel\\|>\\s*"
+        replacement: ""
+        flags:
+          - dotall
+    - name: replace
+      args:
+        pattern: "<turn\\|>\\s*$"
+        replacement: ""

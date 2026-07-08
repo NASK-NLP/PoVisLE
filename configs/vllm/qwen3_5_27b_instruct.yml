@@ -1,0 +1,25 @@
+name: Qwen3.5-27B (Instruct)
+org: Qwen
+model_id: Qwen/Qwen3.5-27B
+model_family: qwen3_5
+model_type: open
+model_size: 27B
+backend: vllm
+model_args:
+  dtype: bfloat16
+  trust_remote_code: true
+  max_model_len: 8192
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+generation:
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+  chat_template_kwargs:
+    enable_thinking: false
+preprocessing:
+  steps:
+    - name: prepend
+      args:
+        prefix: "<image>\n"

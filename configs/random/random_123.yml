@@ -1,0 +1,10 @@
+name: Random (123)
+org: random
+model_id: random
+model_family: random
+model_type: random
+model_size: null
+backend: random
+model_args:
+  seed: 123
+generation: {}

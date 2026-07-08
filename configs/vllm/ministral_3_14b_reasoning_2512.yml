@@ -1,0 +1,30 @@
+name: Ministral-3-14B-Reasoning-2512
+org: MistralAI
+model_id: mistralai/Ministral-3-14B-Reasoning-2512
+model_family: ministral3
+model_type: open
+model_size: 13.9B
+backend: vllm
+model_args:
+  dtype: bfloat16
+  trust_remote_code: true
+  use_chat: true
+  max_model_len: 16384
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+  tokenizer_mode: mistral
+  config_format: mistral
+  load_format: mistral
+generation:
+  max_new_tokens: 8192
+  temperature: 0.0
+  top_p: 1.0
+postprocessing:
+  steps:
+    - name: replace
+      args:
+        pattern: "^(?:\\[THINK\\]\\s*)?.*?\\[/THINK\\]\\s*"
+        replacement: ""
+        flags:
+          - dotall

@@ -1,0 +1,23 @@
+name: LLaVA-v1.6-Mistral-7B-HF
+org: llava-hf
+model_id: llava-hf/llava-v1.6-mistral-7b-hf
+model_family: llava_next
+model_type: open
+model_size: 8B
+backend: vllm
+model_args:
+  dtype: float16
+  trust_remote_code: true
+  max_model_len: 8192
+  tensor_parallel_size: 1
+  gpu_memory_utilization: 0.90
+  enforce_eager: true
+generation:
+  max_new_tokens: 64
+  temperature: 0.0
+  top_p: 1.0
+preprocessing:
+  steps:
+    - name: prepend
+      args:
+        prefix: "<image>\n"
