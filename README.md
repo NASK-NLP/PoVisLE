@@ -1,6 +1,6 @@
-# povisle
+# PoVisLE (**Po**lish **Vis**ion-**L**anguage **E**valuation)
 
-Evaluation tooling for the PoViSLe vision-language benchmark.
+Evaluation tooling for the PoViSLE benchmark.
 
 ## What is in this repository
 
@@ -150,3 +150,15 @@ For circular `mcq` evaluation, each original example is expanded into option ord
 
 This work was supported by the Polish Ministry of Digital Affairs (subsidy no. 4/WII/DBI/2026).
 The computational resources were provided by the Polish high-performance computing infrastructure PLGrid (HPC Center: ACK Cyfronet AGH) under computational grant no. PLG/2026/019138. 
+
+## Citation
+
+```bibtex
+@article{kolos2026povisle,
+  title   = {Jako Tako or Fluent? Presenting PoVisLE: A Polish Vision-Language Evaluation},
+  author  = {Ko{\l}os, Anna and Statkiewicz, Grzegorz and Seweryn, Karolina and Kowol, Katarzyna and Piosek, Karolina and Kusa, Wojciech},
+  journal = {arXiv preprint},
+  year    = {2026}
+}
+```
+
