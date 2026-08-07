@@ -29,11 +29,11 @@ class RandomBackend(BaseBackend):
                 if isinstance(row, dict) and isinstance(row.get(label), str) and row[label].strip()
             ]
             if not labels:
-                return "", None
-            return self.random.choice(labels), None
+                return "", None, None
+            return self.random.choice(labels), None, None
         if task == "yn":
-            return self.random.choice(("yes", "no")), None
+            return self.random.choice(("yes", "no")), None, None
         if task == "open":
-            return "", None
+            return "", None, None
 
         raise ValueError(f"Unsupported task: {task}")

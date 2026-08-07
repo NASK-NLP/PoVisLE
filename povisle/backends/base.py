@@ -1,6 +1,6 @@
 from typing import Any
 
-GenerationResult = tuple[str | None, str | None]
+GenerationResult = tuple[str | None, str | None, dict[str, Any] | None]
 
 
 class BaseBackend:

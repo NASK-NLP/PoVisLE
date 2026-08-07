@@ -5,9 +5,12 @@ from povisle.tasks.base import BaseTask, ParsingMethod, ParsingStatus, ScoringMe
 from povisle.utils import normalize_text
 
 
-YES_MARKERS = {"tak", "yes", "true", "prawda"}
-NO_MARKERS = {"nie", "no", "false", "falsz", "fasz"}
+YES_MARKERS = {"tak", "yes", "true", "prawda", "ja"}
+NO_MARKERS = {"nie", "no", "false", "falsz", "fasz", "nein"}
 LABELS = ("tak", "nie")
+YES_NO_PATTERN = re.compile(
+    rf"\b({'|'.join(sorted((*YES_MARKERS, *NO_MARKERS), key=len, reverse=True))})\b"
+)
 
 
 class YesNoTask(BaseTask):
@@ -55,13 +58,13 @@ def parse_yes_no_prediction(raw_prediction: Any) -> tuple[str | None, ParsingSta
         return "nie", ParsingStatus.PARSED, ParsingMethod.EXACT_YES_NO
 
     for marker in YES_MARKERS:
-        if normalized.startswith(marker):
+        if re.match(rf"{re.escape(marker)}\b", normalized):
             return "tak", ParsingStatus.PARSED, ParsingMethod.SENTENCE_PREFIX
     for marker in NO_MARKERS:
-        if normalized.startswith(marker):
+        if re.match(rf"{re.escape(marker)}\b", normalized):
             return "nie", ParsingStatus.PARSED, ParsingMethod.SENTENCE_PREFIX
 
-    match = re.search(r"\b(tak|yes|true|prawda|nie|no|false|falsz|fasz)\b", normalized)
+    match = YES_NO_PATTERN.search(normalized)
     if match:
         token = match.group(1)
         status = ParsingStatus.PARSED

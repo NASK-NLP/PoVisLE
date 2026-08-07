@@ -1,4 +1,4 @@
-# povisle
+# PoVisLE
 
 Evaluation tooling for the PoViSLe vision-language benchmark.
 
@@ -17,7 +17,7 @@ Evaluation tooling for the PoViSLe vision-language benchmark.
 - `povisle/evaluators/` - default and circular-evaluation loops.
 - `povisle/metrics.py` - overall, per-task, per-category, classification, and confusion-matrix metrics.
 - `configs/` - YAML model configurations grouped by backend.
-- `scripts/` - setup and local evaluation helper scripts.
+- `scripts/` - setup and example evaluation helper scripts.
 
 ## Setup
 
@@ -62,9 +62,11 @@ model_args:
 generation: {}
 ```
 
-API configs use an OpenAI-compatible client. For example, an API config may set `model_args.api_key_env`, `model_args.base_url`, retry settings, and `generation` parameters passed to `chat.completions.create`.
+API configs use an OpenAI-compatible chat-completions client. For example, an API config may set `model_args.api_key_env`, `model_args.base_url`, retry settings, thread count, timeout, and `generation` parameters passed to `chat.completions.create`.
 
 vLLM configs pass `model_args` to `vllm.LLM` and use `generation` values such as `max_new_tokens`, `temperature`, `top_p`, `top_k`, and `repetition_penalty`.
+
+See [`docs/adding-a-model.md`](docs/adding-a-model.md) for instructions on adding a new model config.
 
 ## Run an evaluation
 
@@ -74,7 +76,7 @@ Basic command:
 python -m povisle.evaluate \
   --model-config configs/random/random_42.yml \
   --dataset-id NASK-PIB/PoVisLE \
-  --dataset-revision v1.0.1 \
+  --dataset-revision v1.2.0 \
   --split validation \
   --tasks all
 ```
@@ -87,22 +89,19 @@ Useful options:
 - `--results-dir results` selects the output directory.
 - `--no-image` evaluates with images removed from model inputs.
 - `--no-question` evaluates with questions removed from prompts.
-- `--use-circural` enables circular evaluation for `mcq`.
-- `--circural-mode circular` rotates answer options.
-- `--circural-mode all` evaluates all option permutations.
 - `--hf-push-to-hub --hf-repo-id <org>/<repo>` uploads run and leaderboard artifacts to a Hugging Face dataset repository.
 
-The `circural` spelling is intentional in the current CLI flags and scripts.
+Defaults are `--dataset-id NASK-PIB/PoVisLE`, `--dataset-revision v1.2.0`, `--split validation`, `--tasks all`, and `--results-dir results`.
 
 ## Helper scripts
 
 Local loop:
 
 ```bash
-./scripts/evaluate.sh
+./scripts/evaluate.example.sh
 ```
 
-The local script evaluates the model configs listed in its `MODELS` array. Edit the variables at the top of the file to change dataset revision, split, task selection, sample limit, circular mode, Hub upload behavior, and selected configs.
+The example script evaluates a single model config. Edit the variables at the top of the file to change dataset revision, split, and selected config. For larger runs, call `python -m povisle.evaluate` directly or copy the example script and extend it with your own model loop.
 
 ## Outputs
 
@@ -132,16 +131,14 @@ results/leaderboard/<org>/<model_name>/<dataset_revision>/<split>/<evaluation_mo
 The summary metrics include:
 
 - total examples,
-- mean score,
-- strict accuracy,
+- micro accuracy across all selected examples,
+- macro accuracy across selected task types,
 - parse rate,
 - runtime failure rate,
 - per-task metrics,
-- per-category metrics when a `category` column is present,
-- per-category and per-subcategory metrics when `category` and `subcategory` columns are present,
-- per-image-source metrics when an `image_source` column is present,
+- per-category metrics,
+- per-category and per-subcategory metrics,
+- per-image-source metrics,
 - per-task category and image-source breakdowns,
-- macro/micro precision, recall, F1, and balanced accuracy for closed-label single-prediction tasks,
-- confusion matrices for default `mcq` and `yn` evaluation.
 
-For circular `mcq` evaluation, each original example is expanded into option order variants. The final example score is `1.0` only when all variants are correct.
+For circular `mcq` evaluation, each original example is expanded into option-order variants. The final example score is `1.0` only when all variants are correct.

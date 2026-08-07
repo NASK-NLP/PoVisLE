@@ -11,8 +11,11 @@ from tqdm import tqdm
 from povisle.backends.base import BaseBackend, GenerationResult
 from povisle.backends.hf import ensure_rgb_image
 from povisle.configs import ModelConfig
+from povisle.logger import get_logger
 from povisle.preprocess import preprocess
 from povisle.utils import env_value
+
+logger = get_logger(__name__)
 
 
 class APIBackend(BaseBackend):
@@ -31,18 +34,22 @@ class APIBackend(BaseBackend):
 
     def generate(self, image: Any, prompt: str) -> GenerationResult:
         try:
-            prompt = preprocess(prompt, self.preprocessing_config)
-            content = [{"type": "text", "text": prompt}]
-            if image is not None:
-                content.append({"type": "image_url", "image_url": {"url": image_to_data_url(image)}})
-            message = {
-                "role": "user",
-                "content": content,
-            }
-            response = self._invoke_with_retry([message])
-            return response.content.strip(), None
+            messages = build_chat_messages(image, prompt, self.preprocessing_config)
+            response = self._invoke_with_retry(messages)
+            metadata = response_metadata(response)
+            if not response.choices:
+                error = f"API response has no choices: {metadata}"
+                logger.warning("Error during generation for prompt: %s. Error: %s", prompt, error)
+                return None, error, metadata
+            message = response.choices[0].message
+            if message.content is None:
+                error = f"API response message has no text content: {metadata}"
+                logger.warning("Error during generation for prompt: %s. Error: %s", prompt, error)
+                return None, error, metadata
+            return message.content.strip(), None, metadata
         except Exception as error:
-            return None, str(error)
+            logger.warning("Error during generation for prompt: %s. Error: %s", prompt, error)
+            return None, str(error), None
 
     def generate_batch(self, records: list[dict[str, Any]]) -> list[GenerationResult]:
         results: list[GenerationResult | None] = [None] * len(records)
@@ -75,7 +82,63 @@ class APIBackend(BaseBackend):
                 **self.generation,
             )
 
-        return invoke().choices[0].message
+        return invoke()
+
+
+def build_chat_messages(
+    image: Any,
+    prompt: str,
+    preprocessing_config: Any,
+    image_url: str | None = None,
+) -> list[dict[str, Any]]:
+    prompt = preprocess(prompt, preprocessing_config)
+    content = [{"type": "text", "text": prompt}]
+    if image_url:
+        content.append({"type": "image_url", "image_url": {"url": image_url}})
+    elif image is not None:
+        content.append({"type": "image_url", "image_url": {"url": image_to_data_url(image)}})
+    return [
+        {
+            "role": "user",
+            "content": content,
+        }
+    ]
+
+
+def generation_body(generation: dict[str, Any]) -> dict[str, Any]:
+    body = dict(generation)
+    extra_body = body.pop("extra_body", None)
+    body.pop("extra_headers", None)
+    if extra_body:
+        body.update(extra_body)
+    return body
+
+
+def response_metadata(response: Any) -> dict[str, Any]:
+    metadata = {
+        "id": getattr(response, "id", None),
+        "model": getattr(response, "model", None),
+        "created": getattr(response, "created", None),
+        "system_fingerprint": getattr(response, "system_fingerprint", None),
+    }
+
+    usage = getattr(response, "usage", None)
+    if usage is not None:
+        metadata["usage"] = dump_model(usage)
+
+    choices = getattr(response, "choices", None)
+    if choices:
+        metadata["finish_reason"] = getattr(choices[0], "finish_reason", None)
+
+    return {key: value for key, value in metadata.items() if value is not None}
+
+
+def dump_model(value: Any) -> Any:
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    if hasattr(value, "dict"):
+        return value.dict()
+    return value
 
 
 def image_to_data_url(image: Any) -> str:

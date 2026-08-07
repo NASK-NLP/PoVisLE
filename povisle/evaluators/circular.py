@@ -58,7 +58,7 @@ class CircularEvaluator(BaseEvaluator):
         )
 
         groups: dict[int, dict[str, Any]] = {}
-        for record, (raw_prediction, error) in tqdm(
+        for record, (raw_prediction, error, metadata) in tqdm(
             zip(records, generations, strict=True),
             total=len(records),
             desc=f"Scoring circular {self.task.name}",
@@ -86,6 +86,7 @@ class CircularEvaluator(BaseEvaluator):
                     "raw_prediction": raw_prediction,
                     "processed_prediction": processed_prediction,
                     "error": error,
+                    "metadata": metadata,
                     **asdict(score),
                 }
             )

@@ -16,6 +16,7 @@ from povisle.tasks import get_tasks
 from povisle.utils import format_percent, load_task_dataset, make_run_id, write_json
 
 logger = get_logger(__name__)
+CIRCULAR_MODE = "circular"
 
 
 def save_run(
@@ -88,13 +89,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate VLMs on the povisle benchmark.")
     parser.add_argument("--model-config", type=Path, required=True)
     parser.add_argument("--dataset-id", type=str, default="NASK-PIB/PoVisLE")
-    parser.add_argument("--dataset-revision", type=str, default="v1.0.1")
+    parser.add_argument("--dataset-revision", type=str, default="v1.2.0")
     parser.add_argument("--split", type=str, default="validation")
     parser.add_argument("--tasks", nargs="+", choices=["all", "mcq", "yn", "open"], default=["all"])
     parser.add_argument("--results-dir", type=Path, default=Path("results"))
     parser.add_argument("--limit", type=int, default=None)
-    parser.add_argument("--use-circural", action="store_true")
-    parser.add_argument("--circural-mode", choices=["circular", "all"], default="circular")
     parser.add_argument("--no-image", action="store_true")
     parser.add_argument("--no-question", action="store_true")
     parser.add_argument("--hf-push-to-hub", action="store_true")
@@ -115,11 +114,8 @@ if __name__ == "__main__":
     run_id = make_run_id(model_config)
     logger.info("Run ID: %s", run_id)
 
-    use_circular = args.use_circural and any(task.name == "mcq" for task in tasks)
-    if args.use_circural and not use_circular:
-        logger.warning("--use-circural was set, but no mcq task was selected. Circular evaluation will be skipped.")
-
-    evaluation_mode = f"circular_{args.circural_mode}" if use_circular else "default"
+    use_circular = any(task.name == "mcq" for task in tasks)
+    evaluation_mode = f"circular_{CIRCULAR_MODE}" if use_circular else "default"
     if args.no_image:
         evaluation_mode = "no_image" if evaluation_mode == "default" else f"{evaluation_mode}_no_image"
     if args.no_question:
@@ -142,7 +138,7 @@ if __name__ == "__main__":
         "no_image": args.no_image,
         "no_question": args.no_question,
         "circular_enabled": use_circular,
-        "circular_mode": args.circural_mode if use_circular else None,
+        "circular_mode": CIRCULAR_MODE if use_circular else None,
         "preprocessing": asdict(model_config.preprocessing),
         "postprocessing": asdict(model_config.postprocessing),
         "model_config": asdict(model_config),
@@ -165,7 +161,7 @@ if __name__ == "__main__":
                     backend=backend,
                     run_metadata=run_metadata,
                     postprocessing_config=model_config.postprocessing,
-                    mode=args.circural_mode,
+                    mode=CIRCULAR_MODE,
                     no_image=args.no_image,
                     no_question=args.no_question,
                 )
@@ -184,10 +180,11 @@ if __name__ == "__main__":
     metrics = calculate_metrics(results_by_task, evaluation_mode=evaluation_mode)
     logger.info("Metrics:\n%s", pd.DataFrame(
         [
-            ("Overall Acc", format_percent(metrics["overall"]["strict_accuracy"])),
-            ("MC Strict Acc", format_percent(metrics["by_task"].get("mcq", {}).get("strict_accuracy"))),
-            ("Yes/No Strict Acc", format_percent(metrics["by_task"].get("yn", {}).get("strict_accuracy"))),
-            ("Open Strict Acc", format_percent(metrics["by_task"].get("open", {}).get("strict_accuracy"))),
+            ("Micro Acc", format_percent(metrics["overall"]["micro_accuracy"])),
+            ("Macro Acc", format_percent(metrics["overall"]["macro_accuracy"])),
+            ("MC Acc", format_percent(metrics["by_task"].get("mcq", {}).get("accuracy"))),
+            ("Yes/No Acc", format_percent(metrics["by_task"].get("yn", {}).get("accuracy"))),
+            ("Open Acc", format_percent(metrics["by_task"].get("open", {}).get("accuracy"))),
             ("Parse rate", format_percent(metrics["overall"]["parse_rate"])),
         ],
         columns=["Metric", "Value"],

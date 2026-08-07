@@ -70,9 +70,9 @@ class HuggingFaceBackend(BaseBackend):
             output = self.model.generate(**inputs, **generation_kwargs(self.max_new_tokens, self.temperature, self.top_p))
             prompt_length = inputs["input_ids"].shape[1] if "input_ids" in inputs else 0
             decoded = self.processor.batch_decode(output[:, prompt_length:], skip_special_tokens=True)
-            return decoded[0].strip(), None
+            return decoded[0].strip(), None, None
         except Exception as error:
-            return None, str(error)
+            return None, str(error), None
 
 
 def resolve_torch_dtype(dtype_name: str | None) -> Any:

@@ -1,0 +1,18 @@
+name: Claude Sonnet 5 (2026-06-30, OpenRouter)
+org: Anthropic
+model_id: anthropic/claude-sonnet-5
+model_family: claude-sonnet
+model_type: proprietary
+model_size: null
+backend: api
+model_args:
+  api_key_env: OPENROUTER_API_KEY
+  base_url: https://openrouter.ai/api/v1
+  num_threads: 4
+  max_retries: 10
+  timeout: 120
+generation:
+  max_tokens: 64
+  extra_body:
+    reasoning:
+      effort: none

@@ -12,6 +12,7 @@ model_args:
   max_model_len: 8192
   tensor_parallel_size: 1
   gpu_memory_utilization: 0.90
+  generate_batch_size: 16
   enforce_eager: true
   tokenizer_mode: mistral
   config_format: mistral

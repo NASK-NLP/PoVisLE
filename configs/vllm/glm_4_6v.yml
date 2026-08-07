@@ -8,12 +8,13 @@ backend: vllm
 model_args:
   dtype: bfloat16
   trust_remote_code: true
+  use_chat: true
   max_model_len: 16384
   tensor_parallel_size: 4
   gpu_memory_utilization: 0.90
   enforce_eager: true
 generation:
-  max_new_tokens: 8192
+  max_new_tokens: 16384
   temperature: 0.0
   top_p: 1.0
 postprocessing:
@@ -24,3 +25,11 @@ postprocessing:
         replacement: ""
         flags:
           - dotall
+    - name: replace
+      args:
+        pattern: "<\\|begin_of_box\\|>\\s*"
+        replacement: ""
+    - name: replace
+      args:
+        pattern: "\\s*<\\|end_of_box\\|>"
+        replacement: ""

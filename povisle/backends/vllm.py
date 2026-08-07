@@ -1,4 +1,3 @@
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from tqdm import tqdm
@@ -21,16 +20,23 @@ class VLLMBackend(BaseBackend):
         generation = config.generation
         self.use_chat = bool(model_args.pop("use_chat", False))
         trust_remote_code = model_args.get("trust_remote_code", True)
+        is_mistral_tokenizer = model_args.get("tokenizer_mode") == "mistral"
+        self.generate_batch_size = int(model_args.pop("generate_batch_size", 1 if is_mistral_tokenizer else 0))
+        tokenizer_kwargs = dict(model_args.pop("tokenizer_kwargs", {}))
+        if is_mistral_tokenizer:
+            tokenizer_kwargs.setdefault("fix_mistral_regex", True)
 
         try:
             self.processor = AutoProcessor.from_pretrained(
                 config.model_id,
                 trust_remote_code=trust_remote_code,
+                **tokenizer_kwargs,
             )
         except Exception:
             self.processor = AutoTokenizer.from_pretrained(
                 config.model_id,
                 trust_remote_code=trust_remote_code,
+                **tokenizer_kwargs,
             )
 
         self.chat_template_kwargs = generation.get("chat_template_kwargs", {})
@@ -63,9 +69,9 @@ class VLLMBackend(BaseBackend):
                     use_tqdm=False,
                 )
 
-            return outputs[0].outputs[0].text.strip(), None
+            return outputs[0].outputs[0].text.strip(), None, None
         except Exception as error:
-            return None, str(error)
+            return None, str(error), None
 
     def _build_chat_request(self, record: dict[str, Any]) -> list[dict[str, Any]]:
         prompt = preprocess(record["prompt"], self.preprocessing_config)
@@ -104,39 +110,40 @@ class VLLMBackend(BaseBackend):
         return request
 
     def generate_batch(self, records: list[dict[str, Any]]) -> list[GenerationResult]:
+        if not records:
+            return []
+
         try:
-            if self.use_chat:
-                with ThreadPoolExecutor(max_workers=8) as executor:
-                    requests = list(
-                        tqdm(
-                            executor.map(self._build_chat_request, records),
-                            total=len(records),
-                            desc="Creating requests",
+            batch_size = self.generate_batch_size or len(records)
+            generations: list[GenerationResult] = []
+
+            with tqdm(total=len(records), desc="Generating") as progress:
+                if self.use_chat:
+                    for chunk in chunks(records, batch_size):
+                        requests = [self._build_chat_request(record) for record in chunk]
+                        outputs = self.llm.chat(
+                            requests,
+                            sampling_params=self.sampling_params,
+                            use_tqdm=False,
+                            chat_template_kwargs=self.chat_template_kwargs,
                         )
-                    )
-
-                outputs = self.llm.chat(
-                    requests,
-                    sampling_params=self.sampling_params,
-                    use_tqdm=True,
-                    chat_template_kwargs=self.chat_template_kwargs,
-                )
-            else:
-                with ThreadPoolExecutor(max_workers=8) as executor:
-                    requests = list(
-                        tqdm(
-                            executor.map(self._build_generation_request, records),
-                            total=len(records),
-                            desc="Creating requests",
+                        generations.extend((output.outputs[0].text.strip(), None, None) for output in outputs)
+                        progress.update(len(chunk))
+                else:
+                    for chunk in chunks(records, batch_size):
+                        requests = [self._build_generation_request(record) for record in chunk]
+                        outputs = self.llm.generate(
+                            requests,
+                            sampling_params=self.sampling_params,
+                            use_tqdm=False,
                         )
-                    )
+                        generations.extend((output.outputs[0].text.strip(), None, None) for output in outputs)
+                        progress.update(len(chunk))
 
-                outputs = self.llm.generate(
-                    requests,
-                    sampling_params=self.sampling_params,
-                    use_tqdm=True,
-                )
-
-            return [(output.outputs[0].text.strip(), None) for output in outputs]
+            return generations
         except Exception as error:
-            return [(None, str(error)) for _record in records]
+            return [(None, str(error), None) for _record in records]
+
+
+def chunks[T](items: list[T], size: int) -> list[list[T]]:
+    return [items[index : index + size] for index in range(0, len(items), size)]

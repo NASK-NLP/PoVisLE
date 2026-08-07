@@ -1,0 +1,28 @@
+name: Qwen3.5-397B-A17B (Thinking)
+org: Qwen
+model_id: Qwen3.5-397B-A17B
+model_family: qwen3_5
+model_type: open
+model_size: 397B
+backend: api
+model_args:
+  api_key_env: QWEN35_API_KEY
+  base_url: http://bgpu05.hv.rd.nask.pl:8000/v1
+  timeout: 120
+  max_retries: 10
+  num_threads: 4
+generation:
+  max_completion_tokens: 16384
+  temperature: 0.0
+  top_p: 1.0
+  extra_body:
+    chat_template_kwargs:
+      enable_thinking: true
+postprocessing:
+  steps:
+    - name: replace
+      args:
+        pattern: "^(?:<think>\\s*)?.*?</think>\\s*"
+        replacement: ""
+        flags:
+          - dotall
