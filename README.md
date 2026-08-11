@@ -1,17 +1,17 @@
 # PoVisLE (**Po**lish **Vis**ion-**L**anguage **E**valuation)
 
 <p align="center">
-    <a href="https://arxiv.org/">
-        <img src="https://img.shields.io/badge/arXiv-todo-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
+    <a href="https://arxiv.org/abs/2608.07763">
+        <img src="https://img.shields.io/badge/arXiv-preprint-b31b1b?logo=arxiv&logoColor=white" alt="arXiv">
     </a>
     <a href="https://huggingface.co/datasets/NASK-PIB/PoVisLE">
-        <img src="https://img.shields.io/badge/%F0%9F%A4%97%20-PoVisLE%20(Validation)-FFD21E" alt="PoVisLE Validation">
+        <img src="https://img.shields.io/badge/%F0%9F%A4%97%20-Dataset%20(Validation)-FFD21E" alt="PoVisLE Validation">
     </a>
     <a href="https://huggingface.co/spaces/NASK-PIB/PoVisLE">
         <img src="https://img.shields.io/badge/%F0%9F%8F%86%20-Leaderboard-d7263d" alt="PoVisLE Leaderboard">
     </a>
     <a href="LICENSE">
-        <img src="https://img.shields.io/github/license/NASK-PIB/PoVisLE" alt="License">
+        <img src="https://img.shields.io/github/license/NASK-NLP/PoVisLE" alt="License">
     </a>
 </p>
 
